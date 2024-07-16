@@ -1,0 +1,63 @@
+Report Problem ATM BPD Bali
+Summary:
+Tanggal : 16-07-2024 Jam 17:00 WITA
+Problem Hardware: 4
+Problem Down: 1
+Problem Supply Out: 11
+ATM Warning: 0
+
+Rincian:
+Problem Hardware: 4
+No | ID_ATM | NAMA ATM | START_ERROR | KET
+1. 29 | Varis Mengwi | 16/07/2024 10:00:00 | Receipt Printer Routine errors; 
+2. 170 | ATM Jungutbatu | 13/07/2024 23:00:00 | [HF]Magnetic Card Reader/Write=[Fatal error]; 
+3. 235 | ATM A.Yani Negara | 15/07/2024 16:00:00 | Receipt Printer error; 
+4. 20006 | CRM Mangupura | 16/07/2024 17:00:00 | Cash Handler error; 
+
+Problem Down: 1
+No | ID_ATM | NAMA ATM | START_ERROR | KET
+1. 170 | ATM Jungutbatu | 11/07/2024 10:00:00 | Off-line; 
+
+Supply Out: 11
+No | ID_ATM | NAMA ATM | START_ERROR | KET
+1. 10 | ATM Cabang Ubud | 16/07/2024 17:00:00 | [SS]Cash Handler Reject Bin=[Overfill]; 
+2. 96 | ATM Blahbatuh | 16/07/2024 15:00:00 | [SS]Cash Handler Reject Bin=[Overfill]; 
+3. 97 | ATM Tampaksiring | 16/07/2024 16:00:00 | [SS]Cash Handler Reject Bin=[Overfill]; 
+4. 132 | ATM Capem Tamblang | 16/07/2024 16:00:00 | [SS]Cash Handler Reject Bin=[Overfill]; 
+5. 146 | ATM Pemogan | 15/07/2024 17:00:00 | [SS]Cash Handler Reject Bin=[Overfill]; 
+6. 173 | ATM RSU Negara | 16/07/2024 15:00:00 | Receipt Paper Low; 
+7. 178 | ATM Banyuning | 15/07/2024 05:00:01 | [SS]Cash Handler Reject Bin=[Overfill]; Currency Cassettes Out; 
+8. 194 | ATM Penarukan | 15/07/2024 12:00:00 | [SS]Cash Handler Reject Bin=[Overfill]; Currency Cassettes Out; 
+9. 235 | ATM A.Yani Negara | 15/07/2024 15:00:00 | Receipt Paper Out; 
+10. 20006 | CRM Mangupura | 16/07/2024 17:00:00 | Currency Cassettes Out; [SS]Type 4 Currency Cassettes=[Media Out]; 
+11. 20018 | CRM Cabang Seririt | 16/07/2024 16:00:00 | Receipt Paper Low;
+Report Persentase Saldo di Bawah Pagu ATM BPD Bali
+Tanggal : 16-07-2024 Jam 17:00 WITA
+
+No | ID_ATM | NAMA ATM | JML UANG | PERCENT | START_PAGU 
+1. 194 | ATM Penarukan | 93 | 2.33%  | 16/07/2024 11:00:00
+2. 228 | ATM Bandara Zanuddin Abdul Madjid | 475 | 11.88%  | 09/07/2024 12:00:00
+3. 93 | ATM SPBU Dalung | 655 | 16.38%  | 16/07/2024 14:00:00
+4. 222 | ATM Toya Pakeh | 758 | 18.95%  | 16/07/2024 12:00:00
+5. 14 | ATM Kas Gubernur | 785 | 19.63%  | 16/07/2024 17:00:00
+6. 20003 | CRM Capem Gatot Subroto | 858 | 21.45%  | 12/07/2024 14:00:00
+7. 20016 | CRM Capem kediri | 880 | 22.00%  | 16/07/2024 17:00:00
+8. 20019 | CRM Cabang Karangasem | 907 | 22.68%  | 16/07/2024 16:00:00
+9. 20023 | CRM Capem Sukawati | 942 | 23.55%  | 16/07/2024 16:00:00
+10. 41 | ATM RS.Wangaya | 968 | 24.20%  | 16/07/2024 17:00:00
+monitoring_npm:
+Down Nodes - Icon+
+HELP
+Down Nodes - Lintasarta
+Status 	Gerai Samsat Pupuan
+Status 	Kas MPP Tabanan
+HELP
+Down Nodes - Telkom
+HELP
+Down Nodes - Indosat
+Status 	ATM Jungutbatu
+HELP
+Down Nodes LAN
+Status 	ATM Capem Monang Maning
+Status 	ATM Capem Tamblang (Kubutambahan)
+Status 	RTR Kasda Karangasem
