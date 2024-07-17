@@ -1,6 +1,6 @@
 import pandas as pd
 import re
-from datetime import datetime
+from datetime import datetime, timedelta
 import urllib.parse
 from collections import defaultdict
 
@@ -80,8 +80,8 @@ def process_text_file(text_file_path, atm_info, exceptions):
                         percent_value = float(percent.strip('%'))
                         if id_atm not in exceptions:
                             problem_details = (
-                                f"saldo mendekati pagu dengan jumlah uang {jml_uang}, nilai tersebut {percent} dari total saldo, "
-                                f"saldo mendekati pagu mulai pukul {start_pagu} pada ATM ID {id_atm_str}"
+                                f"saldo dibawah pagu dengan jumlah uang {jml_uang}, nilai tersebut {percent} dari total saldo, "
+                                f"saldo dibawah pagu mulai pukul {start_pagu} pada ATM ID {id_atm_str}"
                             )
                             if percent_value > 10:
                                 above_ten_percent.append({"ID_ATM": id_atm_str, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "START_TIME": start_pagu, "TYPE": error_type})
@@ -156,6 +156,14 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
     else:
         greeting = "Selamat Sore"
 
+    # Load the history data
+    history_df = pd.read_excel('history.xlsx')
+    history_df["UPDATED_AT"] = pd.to_datetime(history_df["UPDATED_AT"], format='%d/%m/%Y %H:%M:%S')
+    
+    # Ensure all ID_ATM values are 8 digits with trailing zeros
+    history_df["ID_ATM"] = history_df["ID_ATM"].apply(lambda x: f"{int(x):08d}")
+    atm_info["ID_ATM"] = atm_info["ID_ATM"].apply(lambda x: f"{int(x):08d}")
+
     # Iterate through each problem and create the message text
     for problem in problems:
         if "ID_ATM" in problem:
@@ -166,13 +174,58 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
             error_type = problem["TYPE"]
 
             # Find the matching row in the Excel data
-            match = atm_info[atm_info["ID_ATM"] == int(id_atm)]
+            match = atm_info[atm_info["ID_ATM"] == id_atm]
 
             if not match.empty:
                 nama_cabang = match.iloc[0]["NAMA_CABANG"]
                 pic_name = match.iloc[0]["PIC_NAME"]
                 phone = match.iloc[0]["PHONE"]
                 merk_atm = match.iloc[0]["MERK_ATM"]
+
+                # Check if the problem already exists in the history with the same ID_ATM, TIPE_PERMASALAHAN, PERMASALAHAN
+                existing_record = history_df[
+                    (history_df["ID_ATM"] == id_atm) &
+                    (history_df["TIPE_PERMASALAHAN"] == error_type) &
+                    (history_df["PERMASALAHAN"] == problem_details)
+                ]
+
+                now = datetime.now()
+                if not existing_record.empty:
+                    # Check if the time difference is less than 1 hour 30 minutes
+                    updated_at = existing_record["UPDATED_AT"].iloc[0]
+                    time_diff = now - updated_at
+
+                    if time_diff <= timedelta(hours=1, minutes=30):
+                        # Increment the frequency and update UPDATED_AT
+                        new_frequency = existing_record["FREQUENCY"].iloc[0] + 1
+                        history_df.loc[existing_record.index, "FREQUENCY"] = new_frequency
+                        history_df.loc[existing_record.index, "UPDATED_AT"] = now
+                    else:
+                        # Append a new record if the time difference is greater than 1 hour 30 minutes
+                        new_history_records.append(problem)
+                else:
+                    # Append a new record if no matching record is found
+                    new_record = {
+                        "TANGGAL INPUT": now.strftime('%d/%m/%Y %H:%M:%S'),
+                        "HARI": days_in_indonesian[now.strftime("%A")],
+                        "TANGGAL": start_time.split(' ')[0],
+                        "JAM": start_time.split(' ')[1],
+                        "FREQUENCY": 1,
+                        "ID_ATM": id_atm,
+                        "MERK_ATM": merk_atm,
+                        "NAMA_ATM": nama_atm,
+                        "TIPE_PERMASALAHAN": error_type,
+                        "PERMASALAHAN": problem_details,
+                        "TINDAK LANJUT OFFICER FDS": "",
+                        "TINDAK LANJUT PIC": "",
+                        "KETERANGAN": "",
+                        "PROGRES_PERBAIKAN_ATM": "",
+                        "NAMA_PIC": pic_name,
+                        "UNIT KERJA": nama_cabang,
+                        "NO_TELEPHONE": phone,
+                        "UPDATED_AT": now
+                    }
+                    new_history_records.append(new_record)
 
                 # Append details to the message dictionary
                 messages[nama_cabang].append({
@@ -183,30 +236,6 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                     "phone": phone,
                     "type": error_type
                 })
-
-                # Append new record to history
-                now = datetime.now()
-                day_name = days_in_indonesian[now.strftime("%A")]
-                new_record = {
-                    "TANGGAL INPUT": now.strftime('%d/%m/%Y %H:%M:%S'),
-                    "HARI": day_name,
-                    "TANGGAL": start_time.split(' ')[0],
-                    "JAM": start_time.split(' ')[1],
-                    "FREQUENCY": "",
-                    "ID_ATM": id_atm,
-                    "MERK_ATM": merk_atm,
-                    "NAMA_ATM": nama_atm,
-                    "TIPE_PERMASALAHAN": error_type,
-                    "PERMASALAHAN": problem_details,
-                    "TINDAK LANJUT OFFICER FDS": "",
-                    "TINDAK LANJUT PIC": "",
-                    "KETERANGAN": "",
-                    "PROGRES_PERBAIKAN_ATM": "",
-                    "NAMA_PIC": pic_name,
-                    "UNIT KERJA": nama_cabang,
-                    "NO_TELEPHONE": phone
-                }
-                new_history_records.append(new_record)
 
                 # Create report down message if the problem is "Problem Down"
                 if error_type == "Problem Down":
@@ -231,6 +260,51 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 phone = match.iloc[0]["PHONE"]
                 merk_atm = match.iloc[0]["MERK_ATM"]
 
+                # Check if the problem already exists in the history with the same ID_ATM, TIPE_PERMASALAHAN, PERMASALAHAN
+                existing_record = history_df[
+                    (history_df["ID_ATM"] == id_atm) &
+                    (history_df["TIPE_PERMASALAHAN"] == error_type) &
+                    (history_df["PERMASALAHAN"] == problem_details)
+                ]
+
+                now = datetime.now()
+                if not existing_record.empty:
+                    # Check if the time difference is less than 1 hour 30 minutes
+                    updated_at = existing_record["UPDATED_AT"].iloc[0]
+                    time_diff = now - updated_at
+
+                    if time_diff <= timedelta(hours=1, minutes=30):
+                        # Increment the frequency and update UPDATED_AT
+                        new_frequency = existing_record["FREQUENCY"].iloc[0] + 1
+                        history_df.loc[existing_record.index, "FREQUENCY"] = new_frequency
+                        history_df.loc[existing_record.index, "UPDATED_AT"] = now
+                    else:
+                        # Append a new record if the time difference is greater than 1 hour 30 minutes
+                        new_history_records.append(problem)
+                else:
+                    # Append a new record if no matching record is found
+                    new_record = {
+                        "TANGGAL INPUT": now.strftime('%d/%m/%Y %H:%M:%S'),
+                        "HARI": days_in_indonesian[now.strftime("%A")],
+                        "TANGGAL": start_time.split(' ')[0],
+                        "JAM": start_time.split(' ')[1],
+                        "FREQUENCY": 1,
+                        "ID_ATM": "",  # Assuming no ID available for ATM_NAME section
+                        "MERK_ATM": merk_atm,
+                        "NAMA_ATM": atm_name,
+                        "TIPE_PERMASALAHAN": error_type,
+                        "PERMASALAHAN": problem_details,
+                        "TINDAK LANJUT OFFICER FDS": "",
+                        "TINDAK LANJUT PIC": "",
+                        "KETERANGAN": "",
+                        "PROGRES_PERBAIKAN_ATM": "",
+                        "NAMA_PIC": pic_name,
+                        "UNIT KERJA": nama_cabang,
+                        "NO_TELEPHONE": phone,
+                        "UPDATED_AT": now
+                    }
+                    new_history_records.append(new_record)
+
                 # Append details to the message dictionary
                 messages[nama_cabang].append({
                     "pic_name": pic_name,
@@ -240,30 +314,6 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                     "phone": phone,
                     "type": error_type
                 })
-
-                # Append new record to history
-                now = datetime.now()
-                day_name = days_in_indonesian[now.strftime("%A")]
-                new_record = {
-                    "TANGGAL INPUT": now.strftime('%d/%m/%Y %H:%M:%S'),
-                    "HARI": day_name,
-                    "TANGGAL": start_time.split(' ')[0],
-                    "JAM": start_time.split(' ')[1],
-                    "FREQUENCY": "",
-                    "ID_ATM": "",
-                    "MERK_ATM": merk_atm,
-                    "NAMA_ATM": atm_name,
-                    "TIPE_PERMASALAHAN": error_type,
-                    "PERMASALAHAN": problem_details,
-                    "TINDAK LANJUT OFFICER FDS": "",
-                    "TINDAK LANJUT PIC": "",
-                    "KETERANGAN": "",
-                    "PROGRES_PERBAIKAN_ATM": "",
-                    "NAMA_PIC": pic_name,
-                    "UNIT KERJA": nama_cabang,
-                    "NO_TELEPHONE": phone
-                }
-                new_history_records.append(new_record)
 
                 # Create report down message if the problem is "Problem Down"
                 if error_type == "Problem Down":
@@ -286,7 +336,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
         message = (
             f"{greeting},\n\n"
             f"Bapak/Ibu {pic_name},\n\n"
-            f"Perkenalkan, saya Made Bramasta Vikana Putra, dari DJA cabang pusat. Saya ingin memberitahukan bahwa ATM dengan details *{atm_details}* yang masih dalam kelolaan *{nama_cabang}* mendapatkan peringatan dengan rincian sebagai berikut:\n\n"
+            f"Perkenalkan, saya Made Bramasta Vikana Putra, dari DJA Kantor Pusat. Saya ingin memberitahukan bahwa ATM dengan details *{atm_details}* yang masih dalam kelolaan *{nama_cabang}* mendapatkan peringatan dengan rincian sebagai berikut:\n\n"
             f"{problem_details_combined}\n\n"
             "Mohon kesediaannya untuk segera menindaklanjuti permasalahan ini. \n"
             "Terima kasih atas perhatian dan kerjasamanya."
@@ -329,17 +379,8 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
     print(f"Messages saved to {output_path}")
 
     # Append new history records to history.xlsx
-    history_df = pd.read_excel('history.xlsx')
     new_history_df = pd.DataFrame(new_history_records)
     updated_history_df = pd.concat([history_df, new_history_df], ignore_index=True)
-
-    # Check if 3 hours have passed for each issue
-    now = datetime.now()
-    for i, row in updated_history_df.iterrows():
-        if row['3 HOURS'] == "":
-            issue_time = datetime.strptime(row['TANGGAL INPUT'], '%d/%m/%Y %H:%M:%S')
-            if (now - issue_time).total_seconds() > 3 * 3600:
-                updated_history_df.at[i, '3 HOURS'] = 'yes'
 
     updated_history_df.to_excel('history.xlsx', index=False)
     print("History updated successfully.")
