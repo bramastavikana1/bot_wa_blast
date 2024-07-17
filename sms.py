@@ -134,6 +134,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
     # Dictionaries to store the result data
     messages = defaultdict(list)
     new_history_records = []
+    report_down_messages = []
 
     # Day names in Indonesian
     days_in_indonesian = {
@@ -171,6 +172,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 nama_cabang = match.iloc[0]["NAMA_CABANG"]
                 pic_name = match.iloc[0]["PIC_NAME"]
                 phone = match.iloc[0]["PHONE"]
+                merk_atm = match.iloc[0]["MERK_ATM"]
 
                 # Append details to the message dictionary
                 messages[nama_cabang].append({
@@ -190,15 +192,27 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                     "HARI": day_name,
                     "TANGGAL": start_time.split(' ')[0],
                     "JAM": start_time.split(' ')[1],
+                    "FREQUENCY": "",
                     "ID_ATM": id_atm,
+                    "MERK_ATM": merk_atm,
                     "NAMA_ATM": nama_atm,
+                    "TIPE_PERMASALAHAN": error_type,
                     "PERMASALAHAN": problem_details,
-                    "TINDAK LANJUT": "",
+                    "TINDAK LANJUT OFFICER FDS": "",
+                    "TINDAK LANJUT PIC": "",
                     "KETERANGAN": "",
-                    "3 HOURS": "",
-                    "TYPE": error_type
+                    "PROGRES_PERBAIKAN_ATM": "",
+                    "NAMA_PIC": pic_name,
+                    "UNIT KERJA": nama_cabang,
+                    "NO_TELEPHONE": phone
                 }
                 new_history_records.append(new_record)
+
+                # Create report down message if the problem is "Problem Down"
+                if error_type == "Problem Down":
+                    report_down_messages.append(
+                        f"ATM ID {id_atm} ({nama_atm}) dari pukul {start_time} dengan pesan kesalahan {problem_details.split(' : ')[-1]}"
+                    )
             else:
                 print(f"No match found for ID_ATM {id_atm}")
                 not_found.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "Problem Details": problem_details, "TYPE": error_type})
@@ -215,6 +229,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 nama_cabang = match.iloc[0]["NAMA_CABANG"]
                 pic_name = match.iloc[0]["PIC_NAME"]
                 phone = match.iloc[0]["PHONE"]
+                merk_atm = match.iloc[0]["MERK_ATM"]
 
                 # Append details to the message dictionary
                 messages[nama_cabang].append({
@@ -234,15 +249,27 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                     "HARI": day_name,
                     "TANGGAL": start_time.split(' ')[0],
                     "JAM": start_time.split(' ')[1],
+                    "FREQUENCY": "",
                     "ID_ATM": "",
+                    "MERK_ATM": merk_atm,
                     "NAMA_ATM": atm_name,
+                    "TIPE_PERMASALAHAN": error_type,
                     "PERMASALAHAN": problem_details,
-                    "TINDAK LANJUT": "",
+                    "TINDAK LANJUT OFFICER FDS": "",
+                    "TINDAK LANJUT PIC": "",
                     "KETERANGAN": "",
-                    "3 HOURS": "",
-                    "TYPE": error_type
+                    "PROGRES_PERBAIKAN_ATM": "",
+                    "NAMA_PIC": pic_name,
+                    "UNIT KERJA": nama_cabang,
+                    "NO_TELEPHONE": phone
                 }
                 new_history_records.append(new_record)
+
+                # Create report down message if the problem is "Problem Down"
+                if error_type == "Problem Down":
+                    report_down_messages.append(
+                        f"ATM ID {id_atm} ({nama_atm}) dari pukul {start_time} dengan pesan kesalahan {problem_details.split(' : ')[-1]}"
+                    )
             else:
                 print(f"No match found for ATM_NAME {atm_name}")
                 not_found.append({"ATM_NAME": atm_name, "Problem Details": problem_details, "TYPE": error_type})
@@ -259,7 +286,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
         message = (
             f"{greeting},\n\n"
             f"Bapak/Ibu {pic_name},\n\n"
-            f"Perkenalkan, saya Made Bramasta Vikana Putra, dari DJA pusat. Saya ingin memberitahukan bahwa ATM dengan details *{atm_details}* yang masih dalam kelolaan *{nama_cabang}* mendapatkan peringatan dengan rincian sebagai berikut:\n\n"
+            f"Perkenalkan, saya Made Bramasta Vikana Putra, dari DJA cabang pusat. Saya ingin memberitahukan bahwa ATM dengan details *{atm_details}* yang masih dalam kelolaan *{nama_cabang}* mendapatkan peringatan dengan rincian sebagai berikut:\n\n"
             f"{problem_details_combined}\n\n"
             "Mohon kesediaannya untuk segera menindaklanjuti permasalahan ini. \n"
             "Terima kasih atas perhatian dan kerjasamanya."
@@ -285,11 +312,19 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
     not_found_df = pd.DataFrame(not_found)
     above_ten_percent_df = pd.DataFrame(above_ten_percent)
 
+    # Create the report down message text
+    report_down_message_text = (
+        f"Selamat pagi, izin untuk report ATM Down pada {days_in_indonesian[datetime.now().strftime('%A')]}, {datetime.now().strftime('%d %B %Y')} periode {datetime.now().strftime('%H:%M')} - {datetime.now().strftime('%H:%M')}. Berikut rinciannya:\n\n"
+        + "\n".join([f"{i+1}. {msg}" for i, msg in enumerate(report_down_messages)])
+    )
+
     # Save the results to a new Excel file with multiple sheets
     with pd.ExcelWriter(output_path) as writer:
         results_df.to_excel(writer, sheet_name='Found', index=False)
         not_found_df.to_excel(writer, sheet_name='Not Found', index=False)
         above_ten_percent_df.to_excel(writer, sheet_name='Above 10 Percent', index=False)
+        # Save the report down message to a new sheet
+        pd.DataFrame([{"Report Down": report_down_message_text}]).to_excel(writer, sheet_name='report_down', index=False)
 
     print(f"Messages saved to {output_path}")
 
