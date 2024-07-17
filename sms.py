@@ -263,7 +263,8 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
             "NAMA_CABANG": nama_cabang,
             "Message": message,
             "PHONE": phone,
-            "WhatsApp_URL": whatsapp_url
+            "WhatsApp_URL": whatsapp_url,
+            "TYPE": details[0]['type']
         })
 
     # Convert the results to a DataFrame
