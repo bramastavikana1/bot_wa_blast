@@ -220,9 +220,9 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                             "TINDAK LANJUT PIC": "",
                             "KETERANGAN": "",
                             "PROGRES_PERBAIKAN_ATM": "",
-                            "NAMA_PIC": pic_name,
-                            "UNIT KERJA": nama_cabang,
-                            "NO_TELEPHONE": phone,
+                            "PIC": pic_name,
+                            "Unit Kerja": nama_cabang,
+                            "Nomor Telepon": phone,
                             "UPDATED_AT": now,
                             "STATUS": ""
                         })
@@ -243,9 +243,9 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                         "TINDAK LANJUT PIC": "",
                         "KETERANGAN": "",
                         "PROGRES_PERBAIKAN_ATM": "",
-                        "NAMA_PIC": pic_name,
-                        "UNIT KERJA": nama_cabang,
-                        "NO_TELEPHONE": phone,
+                        "PIC": pic_name,
+                        "Unit Kerja": nama_cabang,
+                        "Nomor Telepon": phone,
                         "UPDATED_AT": now,
                         "STATUS": ""
                     })
@@ -318,9 +318,9 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                             "TINDAK LANJUT PIC": "",
                             "KETERANGAN": "",
                             "PROGRES_PERBAIKAN_ATM": "",
-                            "NAMA_PIC": pic_name,
-                            "UNIT KERJA": nama_cabang,
-                            "NO_TELEPHONE": phone,
+                            "PIC": pic_name,
+                            "Unit Kerja": nama_cabang,
+                            "Nomor Telepon": phone,
                             "UPDATED_AT": now,
                             "STATUS": ""
                         })
@@ -341,9 +341,9 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                         "TINDAK LANJUT PIC": "",
                         "KETERANGAN": "",
                         "PROGRES_PERBAIKAN_ATM": "",
-                        "NAMA_PIC": pic_name,
+                        "PIC": pic_name,
                         "UNIT KERJA": nama_cabang,
-                        "NO_TELEPHONE": phone,
+                        "Nomor Telepon": phone,
                         "UPDATED_AT": now,
                         "STATUS": ""
                     })
