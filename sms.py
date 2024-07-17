@@ -164,6 +164,9 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
     history_df["ID_ATM"] = history_df["ID_ATM"].apply(lambda x: f"{int(x):08d}")
     atm_info["ID_ATM"] = atm_info["ID_ATM"].apply(lambda x: f"{int(x):08d}")
 
+    # Create a set of existing problems from the report
+    existing_problems_set = set((problem["ID_ATM"], problem["TYPE"], problem["PROBLEM"]) for problem in problems)
+
     # Iterate through each problem and create the message text
     for problem in problems:
         if "ID_ATM" in problem:
@@ -202,10 +205,30 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                         history_df.loc[existing_record.index, "UPDATED_AT"] = now
                     else:
                         # Append a new record if the time difference is greater than 1 hour 30 minutes
-                        new_history_records.append(problem)
+                        new_history_records.append({
+                            "TANGGAL INPUT": now.strftime('%d/%m/%Y %H:%M:%S'),
+                            "HARI": days_in_indonesian[now.strftime("%A")],
+                            "TANGGAL": start_time.split(' ')[0],
+                            "JAM": start_time.split(' ')[1],
+                            "FREQUENCY": 1,
+                            "ID_ATM": id_atm,
+                            "MERK_ATM": merk_atm,
+                            "NAMA_ATM": nama_atm,
+                            "TIPE_PERMASALAHAN": error_type,
+                            "PERMASALAHAN": problem_details,
+                            "TINDAK LANJUT OFFICER FDS": "",
+                            "TINDAK LANJUT PIC": "",
+                            "KETERANGAN": "",
+                            "PROGRES_PERBAIKAN_ATM": "",
+                            "NAMA_PIC": pic_name,
+                            "UNIT KERJA": nama_cabang,
+                            "NO_TELEPHONE": phone,
+                            "UPDATED_AT": now,
+                            "STATUS": ""
+                        })
                 else:
                     # Append a new record if no matching record is found
-                    new_record = {
+                    new_history_records.append({
                         "TANGGAL INPUT": now.strftime('%d/%m/%Y %H:%M:%S'),
                         "HARI": days_in_indonesian[now.strftime("%A")],
                         "TANGGAL": start_time.split(' ')[0],
@@ -223,9 +246,9 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                         "NAMA_PIC": pic_name,
                         "UNIT KERJA": nama_cabang,
                         "NO_TELEPHONE": phone,
-                        "UPDATED_AT": now
-                    }
-                    new_history_records.append(new_record)
+                        "UPDATED_AT": now,
+                        "STATUS": ""
+                    })
 
                 # Append details to the message dictionary
                 messages[nama_cabang].append({
@@ -262,7 +285,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
 
                 # Check if the problem already exists in the history with the same ID_ATM, TIPE_PERMASALAHAN, PERMASALAHAN
                 existing_record = history_df[
-                    (history_df["ID_ATM"] == id_atm) &
+                    (history_df["NAMA_ATM"] == atm_name) &
                     (history_df["TIPE_PERMASALAHAN"] == error_type) &
                     (history_df["PERMASALAHAN"] == problem_details)
                 ]
@@ -280,10 +303,30 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                         history_df.loc[existing_record.index, "UPDATED_AT"] = now
                     else:
                         # Append a new record if the time difference is greater than 1 hour 30 minutes
-                        new_history_records.append(problem)
+                        new_history_records.append({
+                            "TANGGAL INPUT": now.strftime('%d/%m/%Y %H:%M:%S'),
+                            "HARI": days_in_indonesian[now.strftime("%A")],
+                            "TANGGAL": start_time.split(' ')[0],
+                            "JAM": start_time.split(' ')[1],
+                            "FREQUENCY": 1,
+                            "ID_ATM": "",  # Assuming no ID available for ATM_NAME section
+                            "MERK_ATM": merk_atm,
+                            "NAMA_ATM": atm_name,
+                            "TIPE_PERMASALAHAN": error_type,
+                            "PERMASALAHAN": problem_details,
+                            "TINDAK LANJUT OFFICER FDS": "",
+                            "TINDAK LANJUT PIC": "",
+                            "KETERANGAN": "",
+                            "PROGRES_PERBAIKAN_ATM": "",
+                            "NAMA_PIC": pic_name,
+                            "UNIT KERJA": nama_cabang,
+                            "NO_TELEPHONE": phone,
+                            "UPDATED_AT": now,
+                            "STATUS": ""
+                        })
                 else:
                     # Append a new record if no matching record is found
-                    new_record = {
+                    new_history_records.append({
                         "TANGGAL INPUT": now.strftime('%d/%m/%Y %H:%M:%S'),
                         "HARI": days_in_indonesian[now.strftime("%A")],
                         "TANGGAL": start_time.split(' ')[0],
@@ -301,9 +344,9 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                         "NAMA_PIC": pic_name,
                         "UNIT KERJA": nama_cabang,
                         "NO_TELEPHONE": phone,
-                        "UPDATED_AT": now
-                    }
-                    new_history_records.append(new_record)
+                        "UPDATED_AT": now,
+                        "STATUS": ""
+                    })
 
                 # Append details to the message dictionary
                 messages[nama_cabang].append({
@@ -318,11 +361,16 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 # Create report down message if the problem is "Problem Down"
                 if error_type == "Problem Down":
                     report_down_messages.append(
-                        f"ATM ID {id_atm} ({nama_atm}) dari pukul {start_time} dengan pesan kesalahan {problem_details.split(' : ')[-1]}"
+                        f"ATM ID {atm_name} dari pukul {start_time} dengan pesan kesalahan {problem_details.split(' : ')[-1]}"
                     )
             else:
                 print(f"No match found for ATM_NAME {atm_name}")
                 not_found.append({"ATM_NAME": atm_name, "Problem Details": problem_details, "TYPE": error_type})
+
+    # Set STATUS to DONE for records in history that are not in the current report
+    for index, row in history_df.iterrows():
+        if (row["ID_ATM"], row["TIPE_PERMASALAHAN"], row["PERMASALAHAN"]) not in existing_problems_set:
+            history_df.at[index, "STATUS"] = "DONE"
 
     # Combine messages by cabang
     combined_messages = []
