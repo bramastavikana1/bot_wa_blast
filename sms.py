@@ -19,20 +19,31 @@ def process_text_file(text_file_path, atm_info, exceptions):
         monitoring_npm_section = False
         saldo_pagu_section = False
         atm_problem_section = False
+        error_type = ""
+
         for line in lines:
-            # Check if we're in the monitoring_npm section
-            if 'monitoring_npm:' in line:
-                monitoring_npm_section = True
-                saldo_pagu_section = False
-                atm_problem_section = False
-                continue
-            
-            if 'Report Persentase Saldo di Bawah Pagu ATM BPD Bali' in line:
+            if 'Problem Hardware' in line:
+                error_type = 'Problem Hardware'
+            elif 'Problem Down' in line:
+                error_type = 'Problem Down'
+            elif 'Problem Supply Out' in line:
+                error_type = 'Problem Supply Out'
+            elif 'ATM Warning' in line:
+                error_type = 'ATM Warning'
+            elif 'Report Persentase Saldo di Bawah Pagu ATM BPD Bali' in line:
+                error_type = 'Saldo di Bawah Pagu'
                 saldo_pagu_section = True
                 monitoring_npm_section = False
                 atm_problem_section = False
                 continue
 
+            if 'monitoring_npm:' in line:
+                error_type = 'NPM Problem'
+                monitoring_npm_section = True
+                saldo_pagu_section = False
+                atm_problem_section = False
+                continue
+            
             if 'Report Problem ATM BPD Bali' in line:
                 atm_problem_section = True
                 monitoring_npm_section = False
@@ -51,9 +62,9 @@ def process_text_file(text_file_path, atm_info, exceptions):
                             id_atm = atm_match.iloc[0]['ID_ATM']
                             # Check if id_atm is in exceptions
                             if id_atm not in exceptions:
-                                problems.append({"ID_ATM": id_atm, "NAMA_ATM": atm_name, "PROBLEM": f"error dengan keterangan : ID ATM {id_atm} Down Node - No further details"})
+                                problems.append({"ID_ATM": id_atm, "NAMA_ATM": atm_name, "PROBLEM": f"error dengan keterangan : ID ATM {id_atm} Down Node - No further details", "TYPE": error_type})
                         else:
-                            not_found.append({"ATM_NAME": atm_name, "PROBLEM": "Down Node - No further details"})
+                            not_found.append({"ATM_NAME": atm_name, "PROBLEM": "Down Node - No further details", "TYPE": error_type})
                         break
             elif saldo_pagu_section:
                 match = re.match(r'\s*\d+\.\s*(\d+)\s*\|\s*([^|]+)\s*\|\s*(\d+)\s*\|\s*([\d.]+%)\s*\|\s*(.*)', line)
@@ -71,13 +82,11 @@ def process_text_file(text_file_path, atm_info, exceptions):
                                 f"saldo mendekati pagu mulai pukul {start_pagu} pada ATM ID {id_atm}"
                             )
                             if percent_value > 10:
-                                above_ten_percent.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "START_TIME": start_pagu})
+                                above_ten_percent.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "START_TIME": start_pagu, "TYPE": error_type})
                             else:
-                                problems.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "START_TIME": start_pagu})
+                                problems.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "START_TIME": start_pagu, "TYPE": error_type})
                     except ValueError:
                         print(f"Skipping line (ID_ATM not digit or malformed): {line.strip()}")
-                else:
-                    print(f"Skipping line (ID_ATM not digit or malformed): {line.strip()}")
             elif atm_problem_section:
                 match = re.match(r'\s*\d+\.\s*(\d+)\s*\|\s*([^|]+)\s*\|\s*(.*)\s*\|\s*(.*)', line)
                 if match:
@@ -88,11 +97,11 @@ def process_text_file(text_file_path, atm_info, exceptions):
                         ket = match.group(4).strip()
                         if id_atm not in exceptions:
                             problem_details = f"error dengan keterangan : ID ATM {id_atm} {ket} sejak jam {start_error}"
-                            problems.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "START_TIME": start_error})
+                            if "Reject Bin" in ket or "Currency Cassettes" in ket or "Receipt Paper" in ket:
+                                error_type = 'Problem Supply Out'
+                            problems.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "START_TIME": start_error, "TYPE": error_type})
                     except ValueError:
                         print(f"Skipping line (ID_ATM not digit or malformed): {line.strip()}")
-                else:
-                    print(f"Skipping line (ID_ATM not digit or malformed): {line.strip()}")
             else:
                 match = re.match(r'\s*\d+\.\s*(\d+)\s*\|\s*([^|]+)\s*\|\s*(.*)', line)
                 if match:
@@ -101,11 +110,9 @@ def process_text_file(text_file_path, atm_info, exceptions):
                         nama_atm = match.group(2).strip()
                         if id_atm not in exceptions:
                             problem_details = match.group(3).strip()
-                            problems.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "PROBLEM": problem_details})
+                            problems.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "TYPE": error_type})
                     except ValueError:
                         print(f"Skipping line (ID_ATM not digit or malformed): {line.strip()}")
-                else:
-                    print(f"Skipping line (ID_ATM not digit or malformed): {line.strip()}")
     return problems, not_found, above_ten_percent
 
 # Function to create messages and save to a new Excel file
@@ -142,6 +149,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
             nama_atm = problem["NAMA_ATM"]
             problem_details = problem["PROBLEM"]
             start_time = problem.get("START_TIME", datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+            error_type = problem["TYPE"]
 
             # Find the matching row in the Excel data
             match = atm_info[atm_info["ID_ATM"] == id_atm]
@@ -157,7 +165,8 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                     "nama_atm": nama_atm,
                     "id_atm": id_atm,
                     "problem_details": problem_details,
-                    "phone": phone
+                    "phone": phone,
+                    "type": error_type
                 })
 
                 # Append new record to history
@@ -173,16 +182,18 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                     "PERMASALAHAN": problem_details,
                     "TINDAK LANJUT": "",
                     "KETERANGAN": "",
-                    "3 HOURS": ""
+                    "3 HOURS": "",
+                    "TYPE": error_type
                 }
                 new_history_records.append(new_record)
             else:
                 print(f"No match found for ID_ATM {id_atm}")
-                not_found.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "Problem Details": problem_details})
+                not_found.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "Problem Details": problem_details, "TYPE": error_type})
         elif "ATM_NAME" in problem:
             atm_name = problem["ATM_NAME"]
             problem_details = problem["PROBLEM"]
             start_time = problem.get("START_TIME", datetime.now().strftime('%d/%m/%Y %H:%M:%S'))
+            error_type = problem["TYPE"]
 
             # Find the matching row in the Excel data
             match = atm_info[atm_info["NAMA_ATM"] == atm_name]
@@ -198,7 +209,8 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                     "nama_atm": atm_name,
                     "id_atm": "",  # Assuming no ID available for ATM_NAME section
                     "problem_details": problem_details,
-                    "phone": phone
+                    "phone": phone,
+                    "type": error_type
                 })
 
                 # Append new record to history
@@ -214,12 +226,13 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                     "PERMASALAHAN": problem_details,
                     "TINDAK LANJUT": "",
                     "KETERANGAN": "",
-                    "3 HOURS": ""
+                    "3 HOURS": "",
+                    "TYPE": error_type
                 }
                 new_history_records.append(new_record)
             else:
                 print(f"No match found for ATM_NAME {atm_name}")
-                not_found.append({"ATM_NAME": atm_name, "Problem Details": problem_details})
+                not_found.append({"ATM_NAME": atm_name, "Problem Details": problem_details, "TYPE": error_type})
 
     # Combine messages by cabang
     combined_messages = []
