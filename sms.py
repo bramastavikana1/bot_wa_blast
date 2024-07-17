@@ -142,6 +142,15 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
         'Sunday': 'Minggu'
     }
 
+    # Get current hour to determine greeting
+    current_hour = datetime.now().hour
+    if current_hour < 12:
+        greeting = "Selamat Pagi"
+    elif current_hour < 15:
+        greeting = "Selamat Siang"
+    else:
+        greeting = "Selamat Sore"
+
     # Iterate through each problem and create the message text
     for problem in problems:
         if "ID_ATM" in problem:
@@ -244,9 +253,9 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
 
         # Create the combined message text
         message = (
-            f"Selamat pagi,\n\n"
+            f"{greeting},\n\n"
             f"Bapak/Ibu {pic_name},\n\n"
-            f"Perkenalkan, saya Made Bramasta Vikana Putra, dari DJA cabang pusat. Saya ingin memberitahukan bahwa ATM dengan details *{atm_details}* yang masih dalam kelolaan *{nama_cabang}* mendapatkan peringatan dengan rincian sebagai berikut:\n\n"
+            f"Perkenalkan, saya Made Bramasta Vikana Putra, dari DJA pusat. Saya ingin memberitahukan bahwa ATM dengan details *{atm_details}* yang masih dalam kelolaan *{nama_cabang}* mendapatkan peringatan dengan rincian sebagai berikut:\n\n"
             f"{problem_details_combined}\n\n"
             "Mohon kesediaannya untuk segera menindaklanjuti permasalahan ini. \n"
             "Terima kasih atas perhatian dan kerjasamanya."
