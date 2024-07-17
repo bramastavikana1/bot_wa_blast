@@ -60,9 +60,10 @@ def process_text_file(text_file_path, atm_info, exceptions):
                         atm_match = atm_info[atm_info['NAMA_ATM'].str.strip().str.casefold() == atm_name.casefold()]
                         if not atm_match.empty:
                             id_atm = atm_match.iloc[0]['ID_ATM']
+                            id_atm_str = f"{int(id_atm):08d}"  # Ensure ATM ID is 8 digits
                             # Check if id_atm is in exceptions
                             if id_atm not in exceptions:
-                                problems.append({"ID_ATM": id_atm, "NAMA_ATM": atm_name, "PROBLEM": f"error dengan keterangan : ID ATM {id_atm} Down Node - No further details", "TYPE": error_type})
+                                problems.append({"ID_ATM": id_atm_str, "NAMA_ATM": atm_name, "PROBLEM": f"error dengan keterangan : ID ATM {id_atm_str} Down Node - No further details", "TYPE": error_type})
                         else:
                             not_found.append({"ATM_NAME": atm_name, "PROBLEM": "Down Node - No further details", "TYPE": error_type})
                         break
@@ -71,6 +72,7 @@ def process_text_file(text_file_path, atm_info, exceptions):
                 if match:
                     try:
                         id_atm = int(match.group(1).strip())
+                        id_atm_str = f"{id_atm:08d}"  # Ensure ATM ID is 8 digits
                         nama_atm = match.group(2).strip()
                         jml_uang = match.group(3).strip()
                         percent = match.group(4).strip()
@@ -79,12 +81,12 @@ def process_text_file(text_file_path, atm_info, exceptions):
                         if id_atm not in exceptions:
                             problem_details = (
                                 f"saldo mendekati pagu dengan jumlah uang {jml_uang}, nilai tersebut {percent} dari total saldo, "
-                                f"saldo mendekati pagu mulai pukul {start_pagu} pada ATM ID {id_atm}"
+                                f"saldo mendekati pagu mulai pukul {start_pagu} pada ATM ID {id_atm_str}"
                             )
                             if percent_value > 10:
-                                above_ten_percent.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "START_TIME": start_pagu, "TYPE": error_type})
+                                above_ten_percent.append({"ID_ATM": id_atm_str, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "START_TIME": start_pagu, "TYPE": error_type})
                             else:
-                                problems.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "START_TIME": start_pagu, "TYPE": error_type})
+                                problems.append({"ID_ATM": id_atm_str, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "START_TIME": start_pagu, "TYPE": error_type})
                     except ValueError:
                         print(f"Skipping line (ID_ATM not digit or malformed): {line.strip()}")
             elif atm_problem_section:
@@ -92,14 +94,15 @@ def process_text_file(text_file_path, atm_info, exceptions):
                 if match:
                     try:
                         id_atm = int(match.group(1).strip())
+                        id_atm_str = f"{id_atm:08d}"  # Ensure ATM ID is 8 digits
                         nama_atm = match.group(2).strip()
                         start_error = match.group(3).strip()
                         ket = match.group(4).strip()
                         if id_atm not in exceptions:
-                            problem_details = f"error dengan keterangan : ID ATM {id_atm} {ket} sejak jam {start_error}"
+                            problem_details = f"error dengan keterangan : ID ATM {id_atm_str} {ket} sejak jam {start_error}"
                             if "Reject Bin" in ket or "Currency Cassettes" in ket or "Receipt Paper" in ket:
                                 error_type = 'Problem Supply Out'
-                            problems.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "START_TIME": start_error, "TYPE": error_type})
+                            problems.append({"ID_ATM": id_atm_str, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "START_TIME": start_error, "TYPE": error_type})
                     except ValueError:
                         print(f"Skipping line (ID_ATM not digit or malformed): {line.strip()}")
             else:
@@ -107,10 +110,11 @@ def process_text_file(text_file_path, atm_info, exceptions):
                 if match:
                     try:
                         id_atm = int(match.group(1).strip())
+                        id_atm_str = f"{id_atm:08d}"  # Ensure ATM ID is 8 digits
                         nama_atm = match.group(2).strip()
                         if id_atm not in exceptions:
                             problem_details = match.group(3).strip()
-                            problems.append({"ID_ATM": id_atm, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "TYPE": error_type})
+                            problems.append({"ID_ATM": id_atm_str, "NAMA_ATM": nama_atm, "PROBLEM": problem_details, "TYPE": error_type})
                     except ValueError:
                         print(f"Skipping line (ID_ATM not digit or malformed): {line.strip()}")
     return problems, not_found, above_ten_percent
@@ -161,7 +165,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
             error_type = problem["TYPE"]
 
             # Find the matching row in the Excel data
-            match = atm_info[atm_info["ID_ATM"] == id_atm]
+            match = atm_info[atm_info["ID_ATM"] == int(id_atm)]
 
             if not match.empty:
                 nama_cabang = match.iloc[0]["NAMA_CABANG"]
