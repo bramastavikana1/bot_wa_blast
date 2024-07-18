@@ -60,7 +60,7 @@ def process_text_file(text_file_path, atm_info, exceptions):
                         atm_match = atm_info[atm_info['NAMA_ATM'].str.strip().str.casefold() == atm_name.casefold()]
                         if not atm_match.empty:
                             id_atm = atm_match.iloc[0]['ID_ATM']
-                            id_atm_str = f"{int(id_atm):08d}"  # Ensure ATM ID is 8 digits
+                            id_atm_str = f"{int(id_atm)}"  # Ensure ATM ID is 8 digits
                             # Check if id_atm is in exceptions
                             if id_atm not in exceptions:
                                 problems.append({"ID_ATM": id_atm_str, "NAMA_ATM": atm_name, "PROBLEM": f"error dengan keterangan : ID ATM {id_atm_str} Down Node - No further details", "TYPE": error_type})
@@ -72,7 +72,7 @@ def process_text_file(text_file_path, atm_info, exceptions):
                 if match:
                     try:
                         id_atm = int(match.group(1).strip())
-                        id_atm_str = f"{id_atm:08d}"  # Ensure ATM ID is 8 digits
+                        id_atm_str = f"{id_atm}"  # Ensure ATM ID is 8 digits
                         nama_atm = match.group(2).strip()
                         jml_uang = match.group(3).strip()
                         percent = match.group(4).strip()
@@ -94,7 +94,7 @@ def process_text_file(text_file_path, atm_info, exceptions):
                 if match:
                     try:
                         id_atm = int(match.group(1).strip())
-                        id_atm_str = f"{id_atm:08d}"  # Ensure ATM ID is 8 digits
+                        id_atm_str = f"{id_atm}"  # Ensure ATM ID is 8 digits
                         nama_atm = match.group(2).strip()
                         start_error = match.group(3).strip()
                         ket = match.group(4).strip()
@@ -110,7 +110,7 @@ def process_text_file(text_file_path, atm_info, exceptions):
                 if match:
                     try:
                         id_atm = int(match.group(1).strip())
-                        id_atm_str = f"{id_atm:08d}"  # Ensure ATM ID is 8 digits
+                        id_atm_str = f"{id_atm}"  # Ensure ATM ID is 8 digits
                         nama_atm = match.group(2).strip()
                         if id_atm not in exceptions:
                             problem_details = match.group(3).strip()
@@ -161,8 +161,8 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
     history_df["UPDATED_AT"] = pd.to_datetime(history_df["UPDATED_AT"], format='%d/%m/%Y %H:%M:%S')
     
     # Ensure all ID_ATM values are 8 digits with trailing zeros
-    history_df["ID_ATM"] = history_df["ID_ATM"].apply(lambda x: f"{int(x):08d}")
-    atm_info["ID_ATM"] = atm_info["ID_ATM"].apply(lambda x: f"{int(x):08d}")
+    history_df["ID_ATM"] = history_df["ID_ATM"].apply(lambda x: f"{int(x)}")
+    atm_info["ID_ATM"] = atm_info["ID_ATM"].apply(lambda x: f"{int(x)}")
 
     # Create a set of existing problems from the report
     existing_problems_set = set((problem["ID_ATM"], problem["TYPE"], problem["PROBLEM"]) for problem in problems)
