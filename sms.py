@@ -372,7 +372,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 print(f"No match found for ATM_NAME {atm_name}")
                 not_found.append({"ATM_NAME": atm_name, "Problem Details": problem_details, "TYPE": error_type})
 
-    history_df["STATUS"] = history_df["STATUS"].astype(str)
+    # history_df["STATUS"] = history_df["STATUS"].astype(str)
     
     # Set STATUS to DONE for records in history that are not in the current report
     for index, row in history_df.iterrows():
