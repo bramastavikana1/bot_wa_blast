@@ -3,6 +3,11 @@ import re
 from datetime import datetime, timedelta
 import urllib.parse
 from collections import defaultdict
+from dotenv import load_dotenv, find_dotenv
+import os
+
+# Load environment variables from .env file if it exists
+load_dotenv(find_dotenv())
 
 # Function to read and process the text file
 def process_text_file(text_file_path, atm_info, exceptions):
@@ -342,7 +347,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                         "KETERANGAN": "",
                         "PROGRES_PERBAIKAN_ATM": "",
                         "PIC": pic_name,
-                        "Unit Kerja": nama_cabang,
+                        "UNIT KERJA": nama_cabang,
                         "Nomor Telepon": phone,
                         "UPDATED_AT": now,
                         "STATUS": ""
@@ -367,9 +372,8 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 print(f"No match found for ATM_NAME {atm_name}")
                 not_found.append({"ATM_NAME": atm_name, "Problem Details": problem_details, "TYPE": error_type})
 
-    # Ensure the "STATUS" column is of type string
     history_df["STATUS"] = history_df["STATUS"].astype(str)
-
+    
     # Set STATUS to DONE for records in history that are not in the current report
     for index, row in history_df.iterrows():
         if (row["ID_ATM"], row["TIPE_PERMASALAHAN"], row["PERMASALAHAN"]) not in existing_problems_set:
@@ -387,7 +391,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
         message = (
             f"{greeting},\n\n"
             f"Bapak/Ibu {pic_name},\n\n"
-            f"Perkenalkan, saya Made Bramasta Vikana Putra, dari DJA Kantor Pusat. Saya ingin memberitahukan bahwa ATM dengan details *{atm_details}* yang masih dalam kelolaan *{nama_cabang}* mendapatkan peringatan dengan rincian sebagai berikut:\n\n"
+            f"Perkenalkan, saya {os.getenv('PIC_FDS', 'Made Bramasta Vikana Putra')}, dari DJA Kantor Pusat. Saya ingin memberitahukan bahwa ATM dengan details *{atm_details}* yang masih dalam kelolaan *{nama_cabang}* mendapatkan peringatan dengan rincian sebagai berikut:\n\n"
             f"{problem_details_combined}\n\n"
             "Mohon kesediaannya untuk segera menindaklanjuti permasalahan ini. \n"
             "Terima kasih atas perhatian dan kerjasamanya."
