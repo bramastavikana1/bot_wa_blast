@@ -256,8 +256,8 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                     })
 
                 # Append details to the message dictionary
-                messages[nama_cabang].append({
-                    "pic_name": pic_name,
+                messages[pic_name].append({
+                    "nama_cabang": nama_cabang,
                     "nama_atm": nama_atm,
                     "id_atm": id_atm,
                     "problem_details": problem_details,
@@ -347,15 +347,15 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                         "KETERANGAN": "",
                         "PROGRES_PERBAIKAN_ATM": "",
                         "PIC": pic_name,
-                        "UNIT KERJA": nama_cabang,
+                        "Unit Kerja": nama_cabang,
                         "Nomor Telepon": phone,
                         "UPDATED_AT": now,
                         "STATUS": ""
                     })
 
                 # Append details to the message dictionary
-                messages[nama_cabang].append({
-                    "pic_name": pic_name,
+                messages[pic_name].append({
+                    "nama_cabang": nama_cabang,
                     "nama_atm": atm_name,
                     "id_atm": "",  # Assuming no ID available for ATM_NAME section
                     "problem_details": problem_details,
@@ -377,19 +377,20 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
         if (row["ID_ATM"], row["TIPE_PERMASALAHAN"], row["PERMASALAHAN"]) not in existing_problems_set:
             history_df.at[index, "STATUS"] = "DONE"
 
-    # Combine messages by cabang
+    # Combine messages by pic_name
     combined_messages = []
-    for nama_cabang, details in messages.items():
-        pic_name = details[0]['pic_name']
+    for pic_name, details in messages.items():
         phone = details[0]['phone']
         atm_details = ', '.join([f"{d['nama_atm']} ID {d['id_atm']}" for d in details])
         problem_details_combined = '\n\n'.join([d['problem_details'] for d in details])
+        nama_cabang_list = list(set([d['nama_cabang'] for d in details]))  # Get unique branch names
+        nama_cabang_str = ', '.join(nama_cabang_list)
 
         # Create the combined message text
         message = (
             f"{greeting},\n\n"
             f"Bapak/Ibu {pic_name},\n\n"
-            f"Perkenalkan, saya {os.getenv('PIC_FDS', 'Made Bramasta Vikana Putra')}, dari DJA Kantor Pusat. Saya ingin memberitahukan bahwa ATM dengan details *{atm_details}* yang masih dalam kelolaan *{nama_cabang}* mendapatkan peringatan dengan rincian sebagai berikut:\n\n"
+            f"Perkenalkan, saya {os.getenv('PIC_FDS', 'Made Bramasta Vikana Putra')}, dari DJA Kantor Pusat. Saya ingin memberitahukan bahwa ATM dengan details *{atm_details}* yang masih dalam kelolaan *{nama_cabang_str}* mendapatkan peringatan dengan rincian sebagai berikut:\n\n"
             f"{problem_details_combined}\n\n"
             "Mohon kesediaannya untuk segera menindaklanjuti permasalahan ini. \n"
             "Terima kasih atas perhatian dan kerjasamanya."
@@ -403,7 +404,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
 
         # Append the combined message to the list
         combined_messages.append({
-            "NAMA_CABANG": nama_cabang,
+            "PIC_NAME": pic_name,
             "Message": message,
             "PHONE": phone,
             "WhatsApp_URL": whatsapp_url,
