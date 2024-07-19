@@ -3,11 +3,6 @@ import re
 from datetime import datetime, timedelta
 import urllib.parse
 from collections import defaultdict
-from dotenv import load_dotenv, find_dotenv
-import os
-
-# Load environment variables from .env file if it exists
-load_dotenv(find_dotenv())
 
 # Function to read and process the text file
 def process_text_file(text_file_path, atm_info, exceptions):
@@ -389,7 +384,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
         message = (
             f"{greeting},\n\n"
             f"Bapak/Ibu {pic_name},\n\n"
-            f"Perkenalkan, saya {os.getenv('PIC_FDS', 'Made Bramasta Vikana Putra')}, dari DJA Kantor Pusat. Saya ingin memberitahukan bahwa ATM dengan details *{atm_details}* yang masih dalam kelolaan *{nama_cabang}* mendapatkan peringatan dengan rincian sebagai berikut:\n\n"
+            f"Perkenalkan, saya Made Bramasta Vikana Putra, dari DJA Kantor Pusat. Saya ingin memberitahukan bahwa ATM dengan details *{atm_details}* yang masih dalam kelolaan *{nama_cabang}* mendapatkan peringatan dengan rincian sebagai berikut:\n\n"
             f"{problem_details_combined}\n\n"
             "Mohon kesediaannya untuk segera menindaklanjuti permasalahan ini. \n"
             "Terima kasih atas perhatian dan kerjasamanya."
