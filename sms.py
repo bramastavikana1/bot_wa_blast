@@ -195,19 +195,20 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                     (history_df["ID_ATM"] == id_atm) &
                     (history_df["TIPE_PERMASALAHAN"] == error_type) &
                     (history_df["PERMASALAHAN"] == problem_details)
-                ]
+                ].sort_values(by="UPDATED_AT", ascending=False)
 
                 now = datetime.now()
                 if not existing_record.empty:
                     # Check if the time difference is less than 1 hour 30 minutes
-                    updated_at = existing_record["UPDATED_AT"].iloc[0]
+                    latest_record = existing_record.iloc[0]
+                    updated_at = latest_record["UPDATED_AT"]
                     time_diff = now - updated_at
 
                     if time_diff <= timedelta(hours=1, minutes=30):
                         # Increment the frequency and update UPDATED_AT
-                        new_frequency = existing_record["FREQUENCY"].iloc[0] + 1
-                        history_df.loc[existing_record.index, "FREQUENCY"] = new_frequency
-                        history_df.loc[existing_record.index, "UPDATED_AT"] = now
+                        new_frequency = latest_record["FREQUENCY"] + 1
+                        history_df.loc[latest_record.name, "FREQUENCY"] = new_frequency
+                        history_df.loc[latest_record.name, "UPDATED_AT"] = now
                     else:
                         # Append a new record if the time difference is greater than 1 hour 30 minutes
                         new_history_records.append({
@@ -288,24 +289,25 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 phone = match.iloc[0]["PHONE"]
                 merk_atm = match.iloc[0]["MERK_ATM"]
 
-                # Check if the problem already exists in the history with the same ID_ATM, TIPE_PERMASALAHAN, PERMASALAHAN
+                # Check if the problem already exists in the history with the same NAMA_ATM, TIPE_PERMASALAHAN, PERMASALAHAN
                 existing_record = history_df[
                     (history_df["NAMA_ATM"] == atm_name) &
                     (history_df["TIPE_PERMASALAHAN"] == error_type) &
                     (history_df["PERMASALAHAN"] == problem_details)
-                ]
+                ].sort_values(by="UPDATED_AT", ascending=False)
 
                 now = datetime.now()
                 if not existing_record.empty:
                     # Check if the time difference is less than 1 hour 30 minutes
-                    updated_at = existing_record["UPDATED_AT"].iloc[0]
+                    latest_record = existing_record.iloc[0]
+                    updated_at = latest_record["UPDATED_AT"]
                     time_diff = now - updated_at
 
                     if time_diff <= timedelta(hours=1, minutes=30):
                         # Increment the frequency and update UPDATED_AT
-                        new_frequency = existing_record["FREQUENCY"].iloc[0] + 1
-                        history_df.loc[existing_record.index, "FREQUENCY"] = new_frequency
-                        history_df.loc[existing_record.index, "UPDATED_AT"] = now
+                        new_frequency = latest_record["FREQUENCY"] + 1
+                        history_df.loc[latest_record.name, "FREQUENCY"] = new_frequency
+                        history_df.loc[latest_record.name, "UPDATED_AT"] = now
                     else:
                         # Append a new record if the time difference is greater than 1 hour 30 minutes
                         new_history_records.append({
@@ -375,7 +377,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
     # Set STATUS to DONE for records in history that are not in the current report
     for index, row in history_df.iterrows():
         if (row["ID_ATM"], row["TIPE_PERMASALAHAN"], row["PERMASALAHAN"]) not in existing_problems_set:
-            history_df.at[index, "STATUS"] = "DONE"
+            history_df.at[index, "PROGRES_PERBAIKAN_ATM"] = "DONE"
 
     # Combine messages by pic_name
     combined_messages = []
