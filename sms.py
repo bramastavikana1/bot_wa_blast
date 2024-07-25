@@ -199,39 +199,11 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
 
                 now = datetime.now()
                 if not existing_record.empty:
-                    # Check if the time difference is less than 1 hour 30 minutes
                     latest_record = existing_record.iloc[0]
-                    updated_at = latest_record["UPDATED_AT"]
-                    time_diff = now - updated_at
-
-                    if time_diff <= timedelta(hours=1, minutes=30):
-                        # Increment the frequency and update UPDATED_AT
-                        new_frequency = latest_record["FREQUENCY"] + 1
-                        history_df.loc[latest_record.name, "FREQUENCY"] = new_frequency
-                        history_df.loc[latest_record.name, "UPDATED_AT"] = now
-                    else:
-                        # Append a new record if the time difference is greater than 1 hour 30 minutes
-                        new_history_records.append({
-                            "TANGGAL INPUT": now.strftime('%d/%m/%Y %H:%M:%S'),
-                            "HARI": days_in_indonesian[now.strftime("%A")],
-                            "TANGGAL": start_time.split(' ')[0],
-                            "JAM": start_time.split(' ')[1],
-                            "FREQUENCY": 1,
-                            "ID_ATM": id_atm,
-                            "MERK_ATM": merk_atm,
-                            "NAMA_ATM": nama_atm,
-                            "TIPE_PERMASALAHAN": error_type,
-                            "PERMASALAHAN": problem_details,
-                            "TINDAK LANJUT OFFICER FDS": "",
-                            "TINDAK LANJUT PIC": "",
-                            "KETERANGAN": "",
-                            "PROGRES_PERBAIKAN_ATM": "",
-                            "PIC": pic_name,
-                            "Unit Kerja": nama_cabang,
-                            "Nomor Telepon": phone,
-                            "UPDATED_AT": now,
-                            "STATUS": ""
-                        })
+                    new_frequency = latest_record["FREQUENCY"] + 1
+                    history_df.loc[latest_record.name, "FREQUENCY"] = new_frequency
+                    history_df.loc[latest_record.name, "UPDATED_AT"] = now
+                   
                 else:
                     # Append a new record if no matching record is found
                     new_history_records.append({
@@ -298,39 +270,10 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
 
                 now = datetime.now()
                 if not existing_record.empty:
-                    # Check if the time difference is less than 1 hour 30 minutes
                     latest_record = existing_record.iloc[0]
-                    updated_at = latest_record["UPDATED_AT"]
-                    time_diff = now - updated_at
-
-                    if time_diff <= timedelta(hours=1, minutes=30):
-                        # Increment the frequency and update UPDATED_AT
-                        new_frequency = latest_record["FREQUENCY"] + 1
-                        history_df.loc[latest_record.name, "FREQUENCY"] = new_frequency
-                        history_df.loc[latest_record.name, "UPDATED_AT"] = now
-                    else:
-                        # Append a new record if the time difference is greater than 1 hour 30 minutes
-                        new_history_records.append({
-                            "TANGGAL INPUT": now.strftime('%d/%m/%Y %H:%M:%S'),
-                            "HARI": days_in_indonesian[now.strftime("%A")],
-                            "TANGGAL": start_time.split(' ')[0],
-                            "JAM": start_time.split(' ')[1],
-                            "FREQUENCY": 1,
-                            "ID_ATM": "",  # Assuming no ID available for ATM_NAME section
-                            "MERK_ATM": merk_atm,
-                            "NAMA_ATM": atm_name,
-                            "TIPE_PERMASALAHAN": error_type,
-                            "PERMASALAHAN": problem_details,
-                            "TINDAK LANJUT OFFICER FDS": "",
-                            "TINDAK LANJUT PIC": "",
-                            "KETERANGAN": "",
-                            "PROGRES_PERBAIKAN_ATM": "",
-                            "PIC": pic_name,
-                            "Unit Kerja": nama_cabang,
-                            "Nomor Telepon": phone,
-                            "UPDATED_AT": now,
-                            "STATUS": ""
-                        })
+                    new_frequency = latest_record["FREQUENCY"] + 1
+                    history_df.loc[latest_record.name, "FREQUENCY"] = new_frequency
+                    history_df.loc[latest_record.name, "UPDATED_AT"] = now
                 else:
                     # Append a new record if no matching record is found
                     new_history_records.append({
