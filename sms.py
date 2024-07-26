@@ -123,7 +123,12 @@ def process_text_file(text_file_path, atm_info, exceptions):
                     except ValueError:
                         print(f"Skipping line (ID_ATM not digit or malformed): {line.strip()}")
     return problems, not_found, above_ten_percent
+def bulatkanwaktu(dt):
+    dt = dt.replace(minute=0, second=0, microsecond=0)
+    return dt.strftime('%H:%M')
 
+def bedahari(dt1, dt2):
+    return (dt1.year != dt2.year) or (dt1.month != dt2.month) or (dt1.day != dt2.day)
 # Function to create messages and save to a new Excel file
 def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, atm_info_path, output_path):
     # Load the Excel data
@@ -154,7 +159,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
 
     # Get current hour to determine greeting
     current_hour = datetime.now().hour
-    if current_hour < 12:
+    if current_hour < 11:
         greeting = "Selamat Pagi"
     elif current_hour < 15:
         greeting = "Selamat Siang"
@@ -200,9 +205,33 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 now = datetime.now()
                 if not existing_record.empty:
                     latest_record = existing_record.iloc[0]
-                    new_frequency = latest_record["FREQUENCY"] + 1
-                    history_df.loc[latest_record.name, "FREQUENCY"] = new_frequency
-                    history_df.loc[latest_record.name, "UPDATED_AT"] = now
+                    updated_at = latest_record["UPDATED_AT"]
+                    if bedahari(datetime.now(), updated_at):
+                        new_history_records.append({
+                            "TANGGAL INPUT": now.strftime('%d/%m/%Y %H:%M:%S'),
+                            "HARI": days_in_indonesian[now.strftime("%A")],
+                            "TANGGAL": start_time.split(' ')[0],
+                            "JAM": start_time.split(' ')[1],
+                            "FREQUENCY": 1,
+                            "ID_ATM": id_atm,
+                            "MERK_ATM": merk_atm,
+                            "NAMA_ATM": nama_atm,
+                            "TIPE_PERMASALAHAN": error_type,
+                            "PERMASALAHAN": problem_details,
+                            "TINDAK LANJUT OFFICER FDS": "",
+                            "TINDAK LANJUT PIC": "",
+                            "KETERANGAN": "",
+                            "PROGRES_PERBAIKAN_ATM": "",
+                            "PIC": pic_name,
+                            "Unit Kerja": nama_cabang,
+                            "Nomor Telepon": phone,
+                            "UPDATED_AT": now,
+                            "STATUS": ""
+                        })
+                    else:
+                        new_frequency = latest_record["FREQUENCY"] + 1
+                        history_df.loc[latest_record.name, "FREQUENCY"] = new_frequency
+                        history_df.loc[latest_record.name, "UPDATED_AT"] = now
                    
                 else:
                     # Append a new record if no matching record is found
@@ -271,9 +300,33 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 now = datetime.now()
                 if not existing_record.empty:
                     latest_record = existing_record.iloc[0]
-                    new_frequency = latest_record["FREQUENCY"] + 1
-                    history_df.loc[latest_record.name, "FREQUENCY"] = new_frequency
-                    history_df.loc[latest_record.name, "UPDATED_AT"] = now
+                    updated_at = latest_record["UPDATED_AT"]
+                    if bedahari(datetime.now(), updated_at):
+                        new_history_records.append({
+                            "TANGGAL INPUT": now.strftime('%d/%m/%Y %H:%M:%S'),
+                            "HARI": days_in_indonesian[now.strftime("%A")],
+                            "TANGGAL": start_time.split(' ')[0],
+                            "JAM": start_time.split(' ')[1],
+                            "FREQUENCY": 1,
+                            "ID_ATM": "",  # Assuming no ID available for ATM_NAME section
+                            "MERK_ATM": merk_atm,
+                            "NAMA_ATM": atm_name,
+                            "TIPE_PERMASALAHAN": error_type,
+                            "PERMASALAHAN": problem_details,
+                            "TINDAK LANJUT OFFICER FDS": "",
+                            "TINDAK LANJUT PIC": "",
+                            "KETERANGAN": "",
+                            "PROGRES_PERBAIKAN_ATM": "",
+                            "PIC": pic_name,
+                            "Unit Kerja": nama_cabang,
+                            "Nomor Telepon": phone,
+                            "UPDATED_AT": now,
+                            "STATUS": ""
+                        })
+                    else:
+                        new_frequency = latest_record["FREQUENCY"] + 1
+                        history_df.loc[latest_record.name, "FREQUENCY"] = new_frequency
+                        history_df.loc[latest_record.name, "UPDATED_AT"] = now
                 else:
                     # Append a new record if no matching record is found
                     new_history_records.append({
@@ -363,7 +416,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
 
     # Create the report down message text
     report_down_message_text = (
-        f"Selamat pagi, izin untuk report ATM Down pada {days_in_indonesian[datetime.now().strftime('%A')]}, {datetime.now().strftime('%d %B %Y')} periode {datetime.now().strftime('%H:%M')} - {datetime.now().strftime('%H:%M')}. Berikut rinciannya:\n\n"
+        f"{greeting}, izin untuk report ATM Down pada {days_in_indonesian[datetime.now().strftime('%A')]}, {datetime.now().strftime('%d %B %Y')} periode {bulatkanwaktu(datetime.now() - timedelta(hours=1))} - {bulatkanwaktu(datetime.now())}. Berikut rinciannya:\n\n"
         + "\n".join([f"{i+1}. {msg}" for i, msg in enumerate(report_down_messages)])
     )
 
