@@ -123,12 +123,14 @@ def process_text_file(text_file_path, atm_info, exceptions):
                     except ValueError:
                         print(f"Skipping line (ID_ATM not digit or malformed): {line.strip()}")
     return problems, not_found, above_ten_percent
+
 def bulatkanwaktu(dt):
     dt = dt.replace(minute=0, second=0, microsecond=0)
     return dt.strftime('%H:%M')
 
 def bedahari(dt1, dt2):
     return (dt1.year != dt2.year) or (dt1.month != dt2.month) or (dt1.day != dt2.day)
+
 # Function to create messages and save to a new Excel file
 def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, atm_info_path, output_path):
     # Load the Excel data
@@ -168,8 +170,19 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
 
     # Load the history data
     history_df = pd.read_excel('history.xlsx')
-    history_df["UPDATED_AT"] = pd.to_datetime(history_df["UPDATED_AT"], format='%d/%m/%Y %H:%M:%S')
-    
+
+    # Store problematic datetime entries
+    invalid_date_entries = []
+
+    # Parse datetime, mark problematic rows
+    for idx, date_str in history_df["UPDATED_AT"].items():
+        try:
+            parsed_date = pd.to_datetime(date_str, format='%d/%m/%Y %H:%M:%S')
+            history_df.at[idx, "UPDATED_AT"] = parsed_date
+        except ValueError:
+            print(f"Invalid date format at index {idx}: {date_str}")
+            invalid_date_entries.append(idx)
+
     # Ensure all ID_ATM values are 8 digits with trailing zeros
     history_df["ID_ATM"] = history_df["ID_ATM"].apply(lambda x: f"{int(x)}")
     atm_info["ID_ATM"] = atm_info["ID_ATM"].apply(lambda x: f"{int(x)}")
@@ -199,14 +212,15 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 existing_record = history_df[
                     (history_df["ID_ATM"] == id_atm) &
                     (history_df["TIPE_PERMASALAHAN"] == error_type) &
-                    (history_df["PERMASALAHAN"] == problem_details)
+                    (history_df["PERMASALAHAN"] == problem_details) &
+                    (~history_df.index.isin(invalid_date_entries))
                 ].sort_values(by="UPDATED_AT", ascending=False)
 
                 now = datetime.now()
                 if not existing_record.empty:
                     latest_record = existing_record.iloc[0]
                     updated_at = latest_record["UPDATED_AT"]
-                    if bedahari(datetime.now(), updated_at):
+                    if bedahari(now, updated_at):
                         new_history_records.append({
                             "TANGGAL INPUT": now.strftime('%d/%m/%Y %H:%M:%S'),
                             "HARI": days_in_indonesian[now.strftime("%A")],
@@ -232,7 +246,6 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                         new_frequency = latest_record["FREQUENCY"] + 1
                         history_df.loc[latest_record.name, "FREQUENCY"] = new_frequency
                         history_df.loc[latest_record.name, "UPDATED_AT"] = now
-                   
                 else:
                     # Append a new record if no matching record is found
                     new_history_records.append({
@@ -294,14 +307,15 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 existing_record = history_df[
                     (history_df["NAMA_ATM"] == atm_name) &
                     (history_df["TIPE_PERMASALAHAN"] == error_type) &
-                    (history_df["PERMASALAHAN"] == problem_details)
+                    (history_df["PERMASALAHAN"] == problem_details) &
+                    (~history_df.index.isin(invalid_date_entries))
                 ].sort_values(by="UPDATED_AT", ascending=False)
 
                 now = datetime.now()
                 if not existing_record.empty:
                     latest_record = existing_record.iloc[0]
                     updated_at = latest_record["UPDATED_AT"]
-                    if bedahari(datetime.now(), updated_at):
+                    if bedahari(now, updated_at):
                         new_history_records.append({
                             "TANGGAL INPUT": now.strftime('%d/%m/%Y %H:%M:%S'),
                             "HARI": days_in_indonesian[now.strftime("%A")],
@@ -370,9 +384,9 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 print(f"No match found for ATM_NAME {atm_name}")
                 not_found.append({"ATM_NAME": atm_name, "Problem Details": problem_details, "TYPE": error_type})
     
-    # Set STATUS to DONE for records in history that are not in the current report
+    # Set STATUS to DONE for records in history that are not in the current report, ignoring invalid datetime rows
     for index, row in history_df.iterrows():
-        if (row["ID_ATM"], row["TIPE_PERMASALAHAN"], row["PERMASALAHAN"]) not in existing_problems_set:
+        if index not in invalid_date_entries and (row["ID_ATM"], row["TIPE_PERMASALAHAN"], row["PERMASALAHAN"]) not in existing_problems_set:
             history_df.at[index, "PROGRES_PERBAIKAN_ATM"] = "DONE"
 
     # Combine messages by pic_name
