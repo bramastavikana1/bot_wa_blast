@@ -270,7 +270,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 # Create report down message if the problem is "Problem Down"
                 if error_type == "Problem Down":
                     report_down_messages.append(
-                        f"ATM ID {id_atm} ({nama_atm}) dari pukul {start_time} dengan pesan kesalahan {problem_details.split(' : ')[-1]}"
+                        f"({nama_atm}) dengan {problem_details.split(' : ')[-1]} ( *menunggu konfirmasi pihak pengelola* )"
                     )
             else:
                 print(f"No match found for ID_ATM {id_atm}")
@@ -364,7 +364,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 # Create report down message if the problem is "Problem Down"
                 if error_type == "Problem Down":
                     report_down_messages.append(
-                        f"ATM ID {atm_name} dari pukul {start_time} dengan pesan kesalahan {problem_details.split(' : ')[-1]}"
+                        f"{atm_name} dengan {problem_details.split(' : ')[-1]}"
                     )
             else:
                 print(f"No match found for ATM_NAME {atm_name}")
@@ -388,9 +388,8 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
         message = (
             f"{greeting},\n\n"
             f"Bapak/Ibu {pic_name},\n\n"
-            f"Perkenalkan, saya {os.getenv('PIC_FDS', 'Made Bramasta Vikana Putra')}, dari DJA Kantor Pusat. Saya ingin memberitahukan bahwa ATM dengan details *{atm_details}* yang masih dalam kelolaan *{nama_cabang_str}* mendapatkan peringatan dengan rincian sebagai berikut:\n\n"
+            f"Perkenalkan, saya {os.getenv('PIC_FDS', 'Made Bramasta Vikana Putra')}, dari DJA Kantor Pusat. Disampaikan bahwa ATM dengan details *{atm_details}* yang masih dalam kelolaan *{nama_cabang_str}* mendapatkan peringatan dengan rincian sebagai berikut:\n\n"
             f"{problem_details_combined}\n\n"
-            "Mohon kesediaannya untuk segera menindaklanjuti permasalahan ini. \n"
             "Terima kasih atas perhatian dan kerjasamanya."
         )
 
