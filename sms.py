@@ -181,7 +181,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
             history_df.at[idx, "UPDATED_AT"] = parsed_date
         except ValueError:
             print(f"Invalid date format at index {idx}: {date_str}")
-            invalid_date_entries.append(idx)
+            invalid_date_entries.append((idx, date_str))
 
     # Ensure all ID_ATM values are 8 digits with trailing zeros
     history_df["ID_ATM"] = history_df["ID_ATM"].apply(lambda x: f"{int(x)}")
@@ -212,8 +212,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 existing_record = history_df[
                     (history_df["ID_ATM"] == id_atm) &
                     (history_df["TIPE_PERMASALAHAN"] == error_type) &
-                    (history_df["PERMASALAHAN"] == problem_details) &
-                    (~history_df.index.isin(invalid_date_entries))
+                    (history_df["PERMASALAHAN"] == problem_details)
                 ].sort_values(by="UPDATED_AT", ascending=False)
 
                 now = datetime.now()
@@ -307,8 +306,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 existing_record = history_df[
                     (history_df["NAMA_ATM"] == atm_name) &
                     (history_df["TIPE_PERMASALAHAN"] == error_type) &
-                    (history_df["PERMASALAHAN"] == problem_details) &
-                    (~history_df.index.isin(invalid_date_entries))
+                    (history_df["PERMASALAHAN"] == problem_details)
                 ].sort_values(by="UPDATED_AT", ascending=False)
 
                 now = datetime.now()
@@ -384,9 +382,9 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
                 print(f"No match found for ATM_NAME {atm_name}")
                 not_found.append({"ATM_NAME": atm_name, "Problem Details": problem_details, "TYPE": error_type})
     
-    # Set STATUS to DONE for records in history that are not in the current report, ignoring invalid datetime rows
+    # Set STATUS to DONE for records in history that are not in the current report
     for index, row in history_df.iterrows():
-        if index not in invalid_date_entries and (row["ID_ATM"], row["TIPE_PERMASALAHAN"], row["PERMASALAHAN"]) not in existing_problems_set:
+        if (row["ID_ATM"], row["TIPE_PERMASALAHAN"], row["PERMASALAHAN"]) not in existing_problems_set:
             history_df.at[index, "PROGRES_PERBAIKAN_ATM"] = "DONE"
 
     # Combine messages by pic_name
@@ -446,6 +444,10 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
     # Append new history records to history.xlsx
     new_history_df = pd.DataFrame(new_history_records)
     updated_history_df = pd.concat([history_df, new_history_df], ignore_index=True)
+
+    # Restore invalid datetime entries
+    for idx, date_str in invalid_date_entries:
+        updated_history_df.at[idx, "UPDATED_AT"] = date_str
 
     updated_history_df.to_excel('history.xlsx', index=False)
     print("History updated successfully.")
