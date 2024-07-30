@@ -158,6 +158,21 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
         'Saturday': 'Sabtu',
         'Sunday': 'Minggu'
     }
+    
+    months_in_indonesian = {
+        '01': 'Januari',
+        '02': 'Februari',
+        '03': 'Maret',
+        '04': 'April',
+        '05': 'Mei',
+        '06': 'Juni',
+        '07': 'Juli',
+        '08': 'Agustus',
+        '09': 'September',
+        '10': 'Oktober',
+        '11': 'November',
+        '12': 'Desember'
+    }
 
     # Get current hour to determine greeting
     current_hour = datetime.now().hour
@@ -426,8 +441,9 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
     above_ten_percent_df = pd.DataFrame(above_ten_percent)
 
     # Create the report down message text
+    print(datetime.now())
     report_down_message_text = (
-        f"{greeting}, izin untuk report ATM Down pada {days_in_indonesian[datetime.now().strftime('%A')]}, {datetime.now().strftime('%d %B %Y')} periode {bulatkanwaktu(datetime.now() - timedelta(hours=1))} - {bulatkanwaktu(datetime.now())}. Berikut rinciannya:\n\n"
+        f"{greeting}, izin untuk report ATM Down pada {days_in_indonesian[datetime.now().strftime('%A')]}, {datetime.now().strftime('%d')} {months_in_indonesian[datetime.now().strftime('%m')]} {datetime.now().strftime('%Y')} periode {bulatkanwaktu(datetime.now() - timedelta(hours=1))} - {bulatkanwaktu(datetime.now())}. Berikut rinciannya:\n\n"
         + "\n".join([f"{i+1}. {msg}" for i, msg in enumerate(report_down_messages)])
     )
 
