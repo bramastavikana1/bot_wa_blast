@@ -177,11 +177,11 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
     # Get current hour to determine greeting
     current_hour = datetime.now().hour
     if current_hour < 11:
-        greeting = "Selamat Pagi"
+        greeting = "Selamat pagi"
     elif current_hour < 15:
-        greeting = "Selamat Siang"
+        greeting = "Selamat siang"
     else:
-        greeting = "Selamat Sore"
+        greeting = "Selamat sore"
 
     # Load the history data
     history_df = pd.read_excel('history.xlsx')
