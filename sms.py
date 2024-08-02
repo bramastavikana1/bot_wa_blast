@@ -466,7 +466,7 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
     for idx, date_str in invalid_date_entries:
         updated_history_df.at[idx, "UPDATED_AT"] = date_str
 
-    updated_history_df.to_excel('history.xlsx', index=False)
+    updated_history_df.to_excel('history.xlsx', sheet_name= f"{months_in_indonesian[datetime.now().strftime('%m')]} 2024", index=False)
     print("History updated successfully.")
 
 # Main function to run the script
