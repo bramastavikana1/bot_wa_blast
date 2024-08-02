@@ -182,10 +182,11 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
         greeting = "Selamat siang"
     else:
         greeting = "Selamat sore"
-
+    
     # Load the history data
-    history_df = pd.read_excel('history.xlsx')
-
+    history_df = pd.read_excel('history.xlsx', sheet_name= f"{months_in_indonesian[datetime.now().strftime('%m')]} 2024")
+    print("here")
+    print(history_df)
     # Store problematic datetime entries
     invalid_date_entries = []
 
