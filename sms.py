@@ -406,9 +406,11 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
     # Combine messages by pic_name
     combined_messages = []
     for pic_name, details in messages.items():
+        unqueDetails = removeDuplicate(details)
+        sortedDetails = sortedByAtmId(details)
         phone = details[0]['phone']
-        atm_details = ', '.join([f"{d['nama_atm']} ID {d['id_atm']}" for d in details])
-        problem_details_combined = '\n\n'.join([d['problem_details'] for d in details])
+        atm_details = ', '.join([f"{d['nama_atm']} ID {d['id_atm']}" for d in unqueDetails])
+        problem_details_combined = '\n\n'.join([d['problem_details'] for d in sortedDetails])
         nama_cabang_list = list(set([d['nama_cabang'] for d in details]))  # Get unique branch names
         nama_cabang_str = ', '.join(nama_cabang_list)
 
@@ -469,6 +471,35 @@ def create_messages_and_save_to_excel(problems, not_found, above_ten_percent, at
     updated_history_df.to_excel('history.xlsx', sheet_name= f"{months_in_indonesian[datetime.now().strftime('%m')]} 2024", index=False)
     print("History updated successfully.")
 
+def removeDuplicate(details):
+    temp = []
+    datatemp = []
+    for b in range(len(details)):
+        if details[b]['id_atm'] not in temp:
+            datatemp.append(details[b])
+        temp.append(details[b]['id_atm'])
+    return datatemp
+        
+def sortedByAtmId(details):
+    temp = []
+    datatemp = []
+    sortedTemp = []
+    for b in range(len(details)):
+        if details[b]['id_atm'] not in temp:
+            datatemp.append(int(details[b]['id_atm']))
+        temp.append(details[b]['id_atm'])
+
+    datatemp.sort()
+
+    for b in range(len(datatemp)):
+        for c in range(len(details)):
+            if str(datatemp[b]) == details[c]['id_atm']:
+                sortedTemp.append(details[c]) 
+                                    
+    return sortedTemp
+
+        
+    
 # Main function to run the script
 def main():
     text_file_path = 'report.txt'  # Path to the text file
